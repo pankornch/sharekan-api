@@ -1,0 +1,40 @@
+{
+  "name": "sharekan-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node ./src/server.ts",
+    "dev": "nodemon ./src/server.ts",
+    "build": "tsc",
+    "createDB": "node ./src/migrate createDB",
+    "dropDB": "node ./src/migrate dropDB"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@graphql-tools/schema": "^8.2.0",
+    "apollo-server-express": "^3.3.0",
+    "bcryptjs": "^2.4.3",
+    "dataloader": "^2.0.0",
+    "dotenv": "^10.0.0",
+    "faker": "^5.5.3",
+    "graphql": "^15.5.3",
+    "graphql-subscriptions": "^1.2.1",
+    "joi": "^17.4.2",
+    "jsonwebtoken": "^8.5.1",
+    "sequelize": "^6.6.5",
+    "subscriptions-transport-ws": "^0.9.19",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/faker": "^5.5.8",
+    "@types/jsonwebtoken": "^8.5.5",
+    "nodemon": "^2.0.12",
+    "pgtools": "^0.3.2",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.2"
+  }
+}
