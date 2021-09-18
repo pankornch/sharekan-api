@@ -40,7 +40,7 @@ export const joinRoom: Resolver = async (_, { input }, { user, pubsub }) => {
 	} else {
 		const memberExist = await Member.findOne({
 			where: {
-				[Op.and]: [{ roomId: input.roomId }, { userId: user!.id }],
+				[Op.and]: [{ roomId: input.id}, { userId: user!.id }],
 			},
 		})
 
