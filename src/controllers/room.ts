@@ -34,7 +34,7 @@ export const joinRoom: Resolver = async (_, { input }, { user, pubsub }) => {
 		await memberExist.update({
 			userId: user!.id,
 			nickname: user!.name,
-			isAnonymouse: false,
+			isAnonymous: false,
 		})
 		return memberExist.toJSON()
 	} else {
