@@ -20,9 +20,6 @@ const schema = makeExecutableSchema({ typeDefs, resolvers })
 
 ;(async () => {
 	try {
-		await db.ping()
-		await db.sequelize.sync()
-
 		const server = new ApolloServer({
 			schema,
 			context: ({ req }) => {
@@ -55,6 +52,9 @@ const schema = makeExecutableSchema({ typeDefs, resolvers })
 				`🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.graphqlPath}`
 			)
 		})
+
+		await db.ping()
+		await db.sequelize.sync()
 	} catch (e) {
 		console.log(e)
 	}
