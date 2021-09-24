@@ -43,6 +43,9 @@ const schema = makeExecutableSchema({ typeDefs, resolvers })
 			},
 			{ server: httpServer, path: server.graphqlPath }
 		)
+		
+		await db.ping()
+		await db.sequelize.sync()
 
 		httpServer.listen(PORT, () => {
 			console.log(
@@ -53,8 +56,6 @@ const schema = makeExecutableSchema({ typeDefs, resolvers })
 			)
 		})
 
-		await db.ping()
-		await db.sequelize.sync()
 	} catch (e) {
 		console.log(e)
 	}
