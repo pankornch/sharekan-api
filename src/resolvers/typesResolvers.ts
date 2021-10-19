@@ -1,22 +1,43 @@
 import { ResolverType } from "../types/gql"
-import * as roomController from "../controllers/room"
-import { Item, Member, Room, User } from "../models"
+import { Item, Member } from "../models"
 import { Op } from "sequelize"
 import toJSON from "../utils/toJSON"
-import { IItem, IMember } from "../types/models"
+import { ICart, IItem, IMember, IRoom, IUser } from "../types/models"
+import * as roomController from "../controllers/room"
+import {
+	itemLoaderBy,
+	roomLoaderBy,
+	memberLoaderBy,
+	userLoaderBy,
+} from "../utils/dataLoaders"
 
-export const UserResolver: ResolverType = {
+export const UserResolver: ResolverType<IUser> = {
 	rooms: roomController.getUserRooms,
 }
 
-export const RoomResolver: ResolverType = {
-	owner: async (parent) => {
-		const res = await User.findByPk(parent.ownerId)
-		return JSON.parse(JSON.stringify(res))
+export const RoomResolver: ResolverType<IRoom> = {
+	isOwner: async (parent, _, { user }) => {
+		if (parent.ownerId === user?.id) return true
+
+		return false
 	},
-	members: async (parent) => {
-		const res = await Member.findAll({ where: { roomId: parent.id } })
-		return JSON.parse(JSON.stringify(res))
+	owner: async (parent) => {
+		return userLoaderBy.load({
+			key: "id",
+			data: parent.ownerId,
+		})
+	},
+	members: async (parent, { order }) => {
+		const res = await memberLoaderBy.load({
+			key: "roomId",
+			data: parent.id,
+			hasMany: true,
+			order: order,
+		})
+
+		memberLoaderBy.clearAll()
+
+		return res
 	},
 	member: async (parent, { id }) => {
 		const memberRes = await Member.findOne({
@@ -36,22 +57,35 @@ export const RoomResolver: ResolverType = {
 
 		return res?.toJSON()
 	},
-	items: async (parent, _) => {
-		const res = await Item.findAll({ where: { roomId: parent.id } })
-
-		return JSON.parse(JSON.stringify(res))
+	items: async (parent, { order }) => {
+		const res = await itemLoaderBy.load({
+			key: "roomId",
+			data: parent.id,
+			hasMany: true,
+			order: order,
+		})
+		itemLoaderBy.clearAll()
+		return res
 	},
 	total: async (parent) => {
-		const res = await Item.findAll({ where: { roomId: parent.id } })
-		const items = toJSON<IItem[]>(res)
+		const res: IItem[] = await itemLoaderBy.load({
+			key: "roomId",
+			data: parent.id,
+			hasMany: true,
+		})
+		itemLoaderBy.clearAll()
 
-		return items.reduce((acc, { price, quantity }) => acc + price * quantity, 0)
+		return res.reduce((acc, { price, quantity }) => acc + price * quantity, 0)
 	},
 	itemCounts: async (parent) => {
-		const res = await Item.findAll({ where: { roomId: parent.id } })
-		const items = toJSON<IItem[]>(res)
+		const res: IItem[] = await itemLoaderBy.load({
+			key: "roomId",
+			data: parent.id,
+			hasMany: true,
+		})
+		itemLoaderBy.clearAll()
 
-		return items.reduce((acc, { quantity }) => acc + quantity, 0)
+		return res.reduce((acc, { quantity }) => acc + quantity, 0)
 	},
 	item: async (parent, { id }) => {
 		const res = await Item.findOne({
@@ -60,65 +94,72 @@ export const RoomResolver: ResolverType = {
 			},
 		})
 
-		return JSON.parse(JSON.stringify(res))
+		return toJSON(res)
 	},
 }
 
-export const MemberResolver: ResolverType = {
+export const MemberResolver: ResolverType<IMember> = {
 	user: async (parent) => {
-		const res = await User.findByPk(parent.userId)
-		return res?.toJSON()
+		if (!parent.userId) return null
+		return userLoaderBy.load({
+			key: "id",
+			data: parent.userId,
+		})
 	},
-	items: async (parent) => {
-		const res = await Item.findAll({ where: { memberId: parent.id } })
-		return JSON.parse(JSON.stringify(res))
+	items: async (parent, { order }) => {
+		const res = await itemLoaderBy.load({
+			key: "memberId",
+			data: parent.id,
+			hasMany: true,
+			order: order,
+		})
+
+		itemLoaderBy.clearAll()
+		return res
 	},
 	cart: async (parent) => {
-		const itemRes = await Item.findAll({
-			where: {
-				memberId: parent.id,
-			},
+		const items: IItem[] = await itemLoaderBy.load({
+			key: "memberId",
+			data: parent.id,
+			hasMany: true,
 		})
-
-		const items = toJSON<IItem[]>(itemRes)
-
-		return {
-			items,
-		}
+		memberLoaderBy.clearAll()
+		return { items }
 	},
-	role: async (parent: IMember) => {
+	role: async (parent) => {
 		if (parent.isAnonymous) return "BOT"
 
-		const res = await Room.findOne({
-			where: {
-				[Op.and]: [{ id: parent.roomId }, { ownerId: parent.userId }],
-			},
+		const res: IRoom = await roomLoaderBy.load({
+			key: "id",
+			data: parent.roomId,
 		})
 
-		if (res) return "OWNER"
+		if (res.ownerId === parent.userId) return "OWNER"
 
 		return "MEMBER"
 	},
 }
 
-export const ItemResolver: ResolverType = {
+export const ItemResolver: ResolverType<IItem> = {
 	member: async (parent) => {
-		const res = await Member.findByPk(parent.memberId)
-		return res?.toJSON()
+		const res = await memberLoaderBy.load({
+			key: "id",
+			data: parent.memberId,
+		})
+		memberLoaderBy.clearAll()
+
+		return res
 	},
 }
 
-export const CartResolver: ResolverType = {
+export const CartResolver: ResolverType<ICart> = {
 	total: (parent) => {
-		return (parent.items as IItem[]).reduce(
+		return parent.items.reduce(
 			(acc, { price, quantity }) => acc + price * quantity,
 			0
 		)
 	},
 	itemCounts: (parent) => {
-		return (parent.items as IItem[]).reduce(
-			(acc, { quantity }) => acc + quantity,
-			0
-		)
+		return parent.items.reduce((acc, { quantity }) => acc + quantity, 0)
 	},
 }

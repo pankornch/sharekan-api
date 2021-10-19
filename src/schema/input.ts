@@ -91,4 +91,9 @@ export const input = gql`
 	input RemoveRoomInput {
 		id: ID!
 	}
+
+	input RemoveMemberInput {
+		roomId: ID!
+		memberId: ID!
+	}
 `

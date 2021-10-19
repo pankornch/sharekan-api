@@ -25,7 +25,7 @@ export const signUp: Resolver = async (_, { input }) => {
 	}
 
 	delete input.confirmPassword
-	input.email = String(input.email).toLowerCase().trim()
+	input.email = String(input.email).trim()
 	input.password = bcrypt.hashSync(input.password)
 
 	const res = await User.create(input)

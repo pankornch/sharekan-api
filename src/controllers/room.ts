@@ -2,7 +2,7 @@ import { UserInputError } from "apollo-server-errors"
 import { IMember, IRoom } from "../types/models"
 import { Resolver } from "../types/gql"
 import { Op } from "sequelize"
-import { Member, Room } from "../models"
+import { Item, Member, Room } from "../models"
 import toJSON from "../utils/toJSON"
 import { ON_MEMBER_JOINED_ROOM } from "../constants"
 import faker from "faker"
@@ -40,7 +40,7 @@ export const joinRoom: Resolver = async (_, { input }, { user, pubsub }) => {
 	} else {
 		const memberExist = await Member.findOne({
 			where: {
-				[Op.and]: [{ roomId: input.id}, { userId: user!.id }],
+				[Op.and]: [{ roomId: input.id }, { userId: user!.id }],
 			},
 		})
 
@@ -89,13 +89,14 @@ export const getRoom: Resolver = async (_, { id }, { user }) => {
 	return roomRes.toJSON()
 }
 
-export const getUserRooms: Resolver = async (_, { type }, { user }) => {
+export const getUserRooms: Resolver = async (_, { type, order }, { user }) => {
 	switch (type) {
 		case "OWNER": {
 			const res = await Room.findAll({
 				where: {
 					ownerId: user!.id,
 				},
+				order: [["createdAt", order || "ASC"]],
 			})
 
 			return toJSON(res)
@@ -114,6 +115,7 @@ export const getUserRooms: Resolver = async (_, { type }, { user }) => {
 						userId: user!.id,
 					},
 				},
+				order: [["createdAt", order || "ASC"]],
 			})
 
 			return toJSON(res)
@@ -126,6 +128,7 @@ export const getUserRooms: Resolver = async (_, { type }, { user }) => {
 						userId: user!.id,
 					},
 				},
+				order: [["createdAt", order || "ASC"]],
 			})
 
 			return toJSON(res)
@@ -163,7 +166,36 @@ export const removeRoom: Resolver = async (_, { input }, { user }) => {
 		throw new UserInputError("You're not owner in this room")
 	}
 
-	// await roomRes.destroy()
+	await Promise.all([
+		Item.destroy({ where: { roomId: input.id } }),
+		Member.destroy({ where: { roomId: input.id } }),
+		Room.destroy({ where: { id: input.id } }),
+	])
+
+	return "success"
+}
+
+export const removeMember: Resolver = async (_, { input }, { user }) => {
+	const roomRes = await Room.findOne({
+		where: {
+			ownerId: user!.id,
+		},
+		include: {
+			model: Member,
+			where: {
+				[Op.and]: [{ roomId: input.roomId }, { id: input.memberId }],
+			},
+		},
+	})
+
+	if (!roomRes) {
+		throw new UserInputError(
+			"You're not owner in this room or incorrect room id or member id"
+		)
+	}
+
+	await Item.update({ memberId: null }, { where: { memberId: input.memberId } })
+	await Member.destroy({ where: { id: input.memberId } })
 
 	return "success"
 }

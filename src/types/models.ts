@@ -51,3 +51,5 @@ export interface ICart {
 	total: number
 	items: IItem[]
 }
+
+export type Modify<T, R> = Omit<T, keyof R> & R

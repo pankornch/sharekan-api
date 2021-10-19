@@ -9,19 +9,20 @@ export const type = gql`
 		name: String!
 		promptpayNumber: String
 		promptpayName: String
-		rooms(type: GetRoomTypes!): [Room]!
+		rooms(type: GetRoomTypes!, order: String): [Room]!
 		createdAt: Date
 		updatedAt: Date
 	}
 
 	type Room {
 		id: ID!
+		isOwner: Boolean!
 		owner: User!
 		title: String!
-		members: [Member]!
+		members(order: String): [Member]!
 		member(id: ID!): Member!
 		me: Member!
-		items: [Item]!
+		items(order: String): [Item]!
 		item(id: ID!): Item
 		total: Float!
 		itemCounts: Int!
@@ -36,7 +37,7 @@ export const type = gql`
 		isAnonymous: Boolean!
 		nickname: String
 		cart: Cart!
-		items: [Item]!
+		items(order: String): [Item]!
 		room: Room!
 		role: String!
 		payment: Payment
@@ -72,7 +73,7 @@ export const type = gql`
 
 	type Cart {
 		total: Float
-		items: [Item]!
+		items(order: String): [Item]!
 		itemCounts: Int!
 	}
 
