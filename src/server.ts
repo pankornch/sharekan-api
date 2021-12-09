@@ -11,6 +11,8 @@ import typeDefs from "./schema/typeDefs"
 import resolvers from "./resolvers/resolvers"
 import * as db from "./models/db"
 
+import changelog from "./changelog"
+
 const app = express()
 const PORT = process.env.PORT || 4000
 const pubsub = new PubSub()
@@ -19,6 +21,7 @@ const httpServer = createServer(app)
 const schema = makeExecutableSchema({ typeDefs, resolvers })
 
 ;(async () => {
+	app.use("/changelog", changelog)
 	try {
 		const server = new ApolloServer({
 			schema,
@@ -43,7 +46,7 @@ const schema = makeExecutableSchema({ typeDefs, resolvers })
 			},
 			{ server: httpServer, path: server.graphqlPath }
 		)
-		
+
 		await db.ping()
 		await db.sequelize.sync()
 
@@ -55,7 +58,6 @@ const schema = makeExecutableSchema({ typeDefs, resolvers })
 				`🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.graphqlPath}`
 			)
 		})
-
 	} catch (e) {
 		console.log(e)
 	}
