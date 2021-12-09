@@ -13,6 +13,7 @@ export const mutation = gql`
 		createAnonymousUser(input: CreateAnonymousUserInput!): Member!
 		removeRoom(input: RemoveRoomInput!): String!
 		removeMember(input: RemoveMemberInput!): String!
+		updateRoom(input: UpdateRoomInput!): Room!
 
 		addItem(input: AddItemInput!): Item!
 		updateItem(input: UpdateItemInput!): Item!

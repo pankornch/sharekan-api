@@ -18,6 +18,7 @@ const Mutation: ResolverType = {
 	createAnonymousUser: auth(roomController.createAnonymousUser),
 	removeRoom: auth(roomController.removeRoom),
 	removeMember: auth(roomController.removeMember),
+	updateRoom: auth(roomController.updateRoom),
 
 	addItem: auth(itemController.addItem),
 	updateItem: auth(itemController.updateItem),

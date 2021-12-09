@@ -96,4 +96,9 @@ export const input = gql`
 		roomId: ID!
 		memberId: ID!
 	}
+
+	input UpdateRoomInput {
+		id: ID!
+		title: String!
+	}
 `

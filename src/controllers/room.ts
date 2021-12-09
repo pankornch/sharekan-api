@@ -199,3 +199,23 @@ export const removeMember: Resolver = async (_, { input }, { user }) => {
 
 	return "success"
 }
+
+export const updateRoom: Resolver = async (_, { input }, { user }) => {
+	const roomRes = await Room.findOne({
+		where: {
+			[Op.and]: [
+				{
+					id: input.id,
+					ownerId: user!.id,
+				},
+			],
+		},
+	})
+
+
+	if (!roomRes) return
+
+	await roomRes.update({ title: input.title })
+
+	return roomRes.toJSON()
+}
