@@ -49,7 +49,7 @@ export const type = gql`
 		id: ID!
 		name: String!
 		image: String
-		price: Int!
+		price: Float!
 		quantity: Int!
 		member: Member
 		room: Room!
